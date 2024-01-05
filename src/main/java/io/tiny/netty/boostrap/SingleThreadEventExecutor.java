@@ -1,3 +1,5 @@
+package io.tiny.netty.boostrap;
+
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -53,6 +55,8 @@ public class SingleThreadEventExecutor implements Executor {
         if (task == null) {
             throw new NullPointerException("task");
         }
+        // 把任务提交到任务队列中，这里直接把它提交给队列，是考虑到单线程执行器既要处理IO事件
+        // 也要执行用户提交的任务，不可能同一时间做两件事。索性就直接先把任务放到队列中。等IO事件处理了
         // 把任务提交到任务队列中
         addTask(task);
         // 启动单线程执行器中的线程
@@ -78,6 +82,22 @@ public class SingleThreadEventExecutor implements Executor {
             SingleThreadEventExecutor.this.run();
         }).start();
         log.info("新线程创建了！");
+    }
+
+    public void run() {
+        while (true) {
+            try {
+                // 没有事件就阻塞在这里
+                select();
+                // 如果走到这里，就说明selector没有阻塞了
+                Set<SelectionKey> selectedKeys = selector.selectedKeys();
+                processSelectKeys(selectedKeys);
+            } catch (IOException e) {
+                log.error(e.getMessage());
+            } finally {
+                runAllTasks();
+            }
+        }
     }
 
     final boolean offer(Runnable task) {
@@ -133,6 +153,7 @@ public class SingleThreadEventExecutor implements Executor {
         // 如果执行该方法的线程就是执行器重的线程，直接执行方法即可
         if (inEventLoop(Thread.currentThread())) {
             register0(socketChannel);
+            log.info(Thread.currentThread().getName() + "注册了客户端的channel！");
         } else {
             // 在这里，第一次向单线程执行期中提交任务的时候，执行期终于开始执行了，新的线程也开始创建
             this.execute(() -> {
@@ -161,11 +182,10 @@ public class SingleThreadEventExecutor implements Executor {
     }
 
     private void select() throws IOException {
-        Selector selector = this.selector;
         for (; ; ) {
             // 如果没有就绪事件，就在这里阻塞3秒，有限时的阻塞
-            log.info("新线程阻塞在这里3秒");
-            int selectedKeys = selector.select(3000);
+            log.info("新线程阻塞在这里30秒");
+            int selectedKeys = this.selector.select(30000);
             if (selectedKeys != 0 || hashTasks()) {
                 break;
             }
@@ -177,11 +197,11 @@ public class SingleThreadEventExecutor implements Executor {
             return;
         }
         Iterator<SelectionKey> iterator = selectedKeys.iterator();
-        do {
+        while (iterator.hasNext()) {
             final SelectionKey key = iterator.next();
             iterator.remove();
             processSelectKey(key);
-        } while (iterator.hasNext());
+        }
     }
 
     private void processSelectKey(SelectionKey key) throws IOException {
@@ -198,22 +218,6 @@ public class SingleThreadEventExecutor implements Executor {
             byteBuffer.flip();
             byteBuffer.get(bytes);
             log.info("新线程收到客户端发送的数据:{}", new String(bytes));
-        }
-    }
-
-    public void run() {
-        while (true) {
-            try {
-                // 没有事件就阻塞在这里
-                select();
-                // 如果走到这里，就说明selector没有阻塞了
-                Set<SelectionKey> selectedKeys = selector.selectedKeys();
-                processSelectKeys(selectedKeys);
-            } catch (IOException e) {
-                log.error(e.getMessage());
-            } finally {
-                runAllTasks();
-            }
         }
     }
 

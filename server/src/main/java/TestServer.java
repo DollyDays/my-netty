@@ -1,3 +1,5 @@
+import io.tiny.netty.boostrap.SingleThreadEventExecutor;
+
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -22,7 +24,7 @@ public class TestServer {
         SelectionKey selectionKey = serverSocketChannel.register(selector, 0, serverSocketChannel);
         selectionKey.interestOps(SelectionKey.OP_ACCEPT);
         serverSocketChannel.bind(new InetSocketAddress(8080));
-        Work work = new Work();
+        SingleThreadEventExecutor singleThreadEventExecutor = new SingleThreadEventExecutor();
         while (true) {
             logger.info("main阻塞在这里");
             selector.select();
@@ -34,7 +36,7 @@ public class TestServer {
                 if (key.isAcceptable()) {
                     ServerSocketChannel channel = (ServerSocketChannel) key.channel();
                     SocketChannel socketChannel = channel.accept();
-                    work.register(socketChannel);
+                    singleThreadEventExecutor.register(socketChannel);
                     logger.info("客户端在main函数中连接成功！");
                     // 连接成功之后，用客户端的channel写回一条消息
                     socketChannel.write(ByteBuffer.wrap("我发送成功了".getBytes()));
