@@ -1,8 +1,4 @@
-import io.tiny.netty.channel.epoll.NioEventLoop;
-import io.tiny.netty.channel.epoll.SingleThreadEventExecutor;
-
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -13,21 +9,30 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.tiny.netty.channel.nio.NioEventLoop;
+
 @SuppressWarnings("all")
 public class TestServer {
 
     private static final Logger logger = LoggerFactory.getLogger(TestServer.class);
 
     public static void main(String[] args) throws Exception {
+        // 得到服务端channel
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+        // channel设置成非阻塞的
         serverSocketChannel.configureBlocking(false);
+        // 得到selector多路复用器
         Selector selector = Selector.open();
+        // 服务端channel注册到多路复用器上
         SelectionKey selectionKey = serverSocketChannel.register(selector, 0, serverSocketChannel);
+        // 设置感兴趣事件
         selectionKey.interestOps(SelectionKey.OP_ACCEPT);
+        // 绑定端口号
         serverSocketChannel.bind(new InetSocketAddress(8080));
-        NioEventLoop nioEventLoop = new NioEventLoop();
+        // 创建一个Nio线程，也就是单线程执行器
+        NioEventLoop workGroup = new NioEventLoop;
         while (true) {
-            logger.info("main阻塞在这里");
+            logger.info("main函数阻塞在这里吧。。。。。。。");
             selector.select();
             Set<SelectionKey> selectionKeys = selector.selectedKeys();
             Iterator<SelectionKey> keyIterator = selectionKeys.iterator();
@@ -36,14 +41,11 @@ public class TestServer {
                 keyIterator.remove();
                 if (key.isAcceptable()) {
                     ServerSocketChannel channel = (ServerSocketChannel) key.channel();
+                    // 得到客户端的channel
                     SocketChannel socketChannel = channel.accept();
-                    nioEventLoop.register(socketChannel, nioEventLoop);
-                    logger.info("客户端在main函数中连接成功！");
-                    // 连接成功之后，用客户端的channel写回一条消息
-                    socketChannel.write(ByteBuffer.wrap("我发送成功了".getBytes()));
-                    logger.info("main函数服务器向客户端发送数据成功！");
+                    // NioEventLoop自己把客户端的channel注册到自己的selector上
+                    workGroup.register(socketChannel, workGroup);
                 }
             }
         }
     }
-}

@@ -1,4 +1,4 @@
-package io.tiny.netty.channel.epoll;
+package io.tiny.netty.channel.nio;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -9,6 +9,7 @@ import java.nio.channels.spi.SelectorProvider;
 import java.util.Iterator;
 import java.util.Set;
 
+import io.tiny.netty.channel.SingleThreadEventLoop;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -41,12 +42,11 @@ public class NioEventLoop extends SingleThreadEventLoop {
     }
 
     private void select() throws IOException {
-        Selector selector = this.selector;
         // 这里是一个死循环
         for (; ; ) {
             // 如果没有就绪事件，就在这里阻塞3秒，有限时的阻塞
             log.info("新线程阻塞在这里3秒吧。。。。。。。");
-            int selectedKeys = selector.select(3000);
+            int selectedKeys = this.selector.select(3000);
             // 如果有io事件或者单线程执行器中有任务待执行，就退出循环
             if (selectedKeys != 0 || hasTasks()) {
                 break;
