@@ -1,4 +1,5 @@
-import io.tiny.netty.boostrap.SingleThreadEventExecutor;
+import io.tiny.netty.channel.epoll.NioEventLoop;
+import io.tiny.netty.channel.epoll.SingleThreadEventExecutor;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -24,7 +25,7 @@ public class TestServer {
         SelectionKey selectionKey = serverSocketChannel.register(selector, 0, serverSocketChannel);
         selectionKey.interestOps(SelectionKey.OP_ACCEPT);
         serverSocketChannel.bind(new InetSocketAddress(8080));
-        SingleThreadEventExecutor singleThreadEventExecutor = new SingleThreadEventExecutor();
+        NioEventLoop nioEventLoop = new NioEventLoop();
         while (true) {
             logger.info("main阻塞在这里");
             selector.select();
@@ -36,7 +37,7 @@ public class TestServer {
                 if (key.isAcceptable()) {
                     ServerSocketChannel channel = (ServerSocketChannel) key.channel();
                     SocketChannel socketChannel = channel.accept();
-                    singleThreadEventExecutor.register(socketChannel);
+                    nioEventLoop.register(socketChannel, nioEventLoop);
                     logger.info("客户端在main函数中连接成功！");
                     // 连接成功之后，用客户端的channel写回一条消息
                     socketChannel.write(ByteBuffer.wrap("我发送成功了".getBytes()));
