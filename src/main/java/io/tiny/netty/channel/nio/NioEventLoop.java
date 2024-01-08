@@ -33,6 +33,7 @@ public class NioEventLoop extends SingleThreadEventLoop {
             selector = provider.openSelector();
             return selector;
         } catch (IOException e) {
+            log.error(e.getMessage());
             throw new RuntimeException("failed to open a new selector", e);
         }
     }

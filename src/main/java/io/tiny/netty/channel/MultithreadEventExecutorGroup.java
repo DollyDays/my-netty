@@ -6,6 +6,11 @@ import java.util.concurrent.TimeUnit;
  * @author 赖嘉康 <laijiakang@kuaishou.com>
  * Created on 2024-01-08
  */
+
+/**
+ * 多线程事件执行器组件
+ * 后续 Boss/Worker Thread Group继承就可以了
+ */
 public abstract class MultithreadEventExecutorGroup implements EventExecutorGroup {
 
     private final EventExecutor[] eventExecutors;
