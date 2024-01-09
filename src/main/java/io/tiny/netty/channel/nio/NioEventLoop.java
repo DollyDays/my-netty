@@ -16,6 +16,10 @@ import lombok.extern.slf4j.Slf4j;
  * @author 赖嘉康 <laijiakang@kuaishou.com>
  * Created on 2024-01-08
  */
+
+/**
+ * 这里其实就是所说的Work线程了，这里是一个死循环，不断的select，然后处理就绪事件
+ */
 @Slf4j
 public class NioEventLoop extends SingleThreadEventLoop {
 

@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -9,13 +10,29 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.tiny.netty.boostrap.Boostrap;
+import io.tiny.netty.channel.EventLoop;
 import io.tiny.netty.channel.nio.NioEventLoop;
+import io.tiny.netty.channel.nio.NioEventLoopGroup;
 
 @SuppressWarnings("all")
 public class TestServer {
 
     private static final Logger logger = LoggerFactory.getLogger(TestServer.class);
 
+    public static void main(String[] args) throws IOException {
+        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+        serverSocketChannel.configureBlocking(false);
+        Selector selector = Selector.open();
+        SelectionKey selectionKey = serverSocketChannel.register(selector, 0);
+        selectionKey.interestOps(SelectionKey.OP_ACCEPT);
+        SocketChannel socketChannel = serverSocketChannel.accept();
+        NioEventLoopGroup workGroup = new NioEventLoopGroup(2);
+        EventLoop eventLoop = workGroup.next();
+        Boostrap boostrap = new Boostrap();
+        workGroup.shutdownGracefully();
+    }
+/*
     public static void main(String[] args) throws Exception {
         // 得到服务端channel
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
@@ -48,4 +65,5 @@ public class TestServer {
                 }
             }
         }
-    }
+    }*/
+}

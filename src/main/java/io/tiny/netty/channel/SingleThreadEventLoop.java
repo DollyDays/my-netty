@@ -15,6 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor implements EventLoop {
     @Override
+    public EventLoop next() {
+        return this;
+    }
+
+    @Override
     public void register(SocketChannel channel, NioEventLoop nioEventLoop) {
         nioEventLoop.execute(() -> {
             try {
@@ -24,10 +29,5 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
                 log.error(e.getMessage());
             }
         });
-    }
-
-    @Override
-    public EventLoop next() {
-        return this;
     }
 }

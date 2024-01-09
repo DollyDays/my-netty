@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
  * Created on 2024-01-08
  */
 @Slf4j
-public abstract class SingleThreadEventExecutor implements EventExecutor, Executor {
+public abstract class SingleThreadEventExecutor implements EventExecutor {
 
     // 任务队列的容量，默认是Integer的最大值
     protected static final int DEFAULT_MAX_PENDING_TASKS = Integer.MAX_VALUE;
