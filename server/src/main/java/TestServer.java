@@ -30,7 +30,6 @@ public class TestServer {
         NioEventLoopGroup workGroup = new NioEventLoopGroup(2);
         EventLoop eventLoop = workGroup.next();
         Boostrap boostrap = new Boostrap();
-        workGroup.shutdownGracefully();
     }
 /*
     public static void main(String[] args) throws Exception {
